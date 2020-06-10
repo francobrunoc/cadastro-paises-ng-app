@@ -1,0 +1,15 @@
+<div class="text-center">
+  <form #f="ngForm" class="form-signin card mt-5" (submit)="f.form.valid && login()">
+    <h1 class="h3 mb-3 font-weight-normal">Login</h1>
+    <input type="text" #usuario="ngModel" name="usuario"
+           [(ngModel)]="auth.login" class="form-control"
+           [ngClass]="{'is-invalid': usuario.invalid && (usuario.dirty || usuario.touched)}"
+           placeholder="Usuário" required autofocus>
+    <input type="password" #senha="ngModel" name="senha"
+           [(ngModel)]="auth.senha" class="form-control"
+           [ngClass]="{'is-invalid': senha.invalid && (senha.dirty || senha.touched)}"
+           placeholder="Senha" required>
+    <input class="btn btn-lg btn-primary btn-block" value="Entrar" type="submit"/>
+  </form>
+</div>
+
