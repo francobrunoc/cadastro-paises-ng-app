@@ -10,9 +10,10 @@ import {FormsModule} from '@angular/forms';
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 import {UsuarioComponent} from './usuario/usuario.component';
 import {SiglaComponent} from './pais/sigla.component';
-import { NavigationComponent } from './navigation/navigation.component';
-import { HomeComponent } from './home/home.component';
+import {NavigationComponent} from './navigation/navigation.component';
+import {HomeComponent} from './home/home.component';
 import {UsuarioService} from './usuario/service/usuario.service';
+import {DataTablesModule} from 'angular-datatables';
 
 const appRoutes: Routes = [
   {
@@ -45,6 +46,7 @@ const appRoutes: Routes = [
     CommonModule,
     RouterModule.forRoot(appRoutes, {enableTracing: false}),
     NgbModule,
+    DataTablesModule.forRoot()
   ],
   providers: [UsuarioService],
   bootstrap: [AppComponent]

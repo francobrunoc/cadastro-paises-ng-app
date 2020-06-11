@@ -1,5 +1,9 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import {PaisService} from './service/pais.service';
+import {Subject} from 'rxjs';
+import {DataTableDirective} from 'angular-datatables';
+import {UsuarioService} from '../usuario/service/usuario.service';
+import * as $ from 'jquery';
 
 @Component({
   selector: 'app-pais',
@@ -8,15 +12,43 @@ import {PaisService} from './service/pais.service';
 })
 export class PaisComponent implements OnInit {
 
-  constructor(private paisService: PaisService) {}
+  bool = true;
+  @ViewChild(DataTableDirective, {static: false})
+  dtElement: DataTableDirective;
 
-  get collectionSize() {
-    return this.PAISES.length;
-  }
+  dtTrigger: Subject<any> = new Subject();
 
-  page = 1;
-  pageSize = 4;
-  PAISES: PaisViewModel[] = [];
+  dtOptions: DataTables.Settings = {
+    data: [],
+    columns: [
+      {title: '#', data: 'id'},
+      {title: 'Nome', data: 'nome'},
+      {title: 'Sigla', data: 'sigla'},
+      {title: 'Gentilico', data: 'gentilico'},
+      {
+        data: '', orderable: false, render() { return `
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="edit">Alterar</input>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="delete">Excluir</input>
+                    </div>`;
+        }
+      }
+    ],
+    rowCallback: (row: Node, data: PaisViewModel) => {
+      const self = this;
+      $('td', row).off('click');
+      $('#edit', row).on('click', () => {
+        self.edit(data);
+      });
+      $('#delete', row).on('click', () => {
+        self.delete(data);
+      });
+      return row;
+    }
+  };
+
+  constructor(private paisService: PaisService, public usuarioService: UsuarioService) {}
+
   model: PaisViewModel = {
     id: null,
     nome: '',
@@ -24,21 +56,30 @@ export class PaisComponent implements OnInit {
     gentilico: ''
   };
 
-  get paises(): PaisViewModel[] {
-    return this.PAISES
-      .map((pais, i) => ({id: i + 1, ...pais}))
-      .slice((this.page - 1) * this.pageSize, (this.page - 1) * this.pageSize + this.pageSize);
-  }
-
-  ngOnInit(): void {
+  ngOnInit() {
     this.listAll();
   }
 
-  listAll(): void {
+   rerender(): void {
+    if ('dtInstance' in this.dtElement){
+      this.dtElement.dtInstance.then((dtInstance: DataTables.Api) => {
+        dtInstance.destroy();
+        this.dtTrigger.next();
+      });
+    }
+    else {
+      this.dtTrigger.next();
+    }
+  }
+
+  listAll() {
     if (this.token()) {
       this.paisService.listAll().subscribe(
         res => {
-          this.PAISES = res;
+          this.dtOptions.data = res;
+          setTimeout(() => {
+            this.rerender();
+          });
         },
         error => {
           console.log(error);
@@ -48,18 +89,20 @@ export class PaisComponent implements OnInit {
   }
 
   delete(pais: PaisViewModel): void {
-    if (confirm('Você tem certeza que deseja excluir este país?') && this.token()) {
+    if (this.usuarioService.getAdmin()) {
+      if (confirm('Você tem certeza que deseja excluir este país?') && this.token()) {
         this.paisService.delete(pais.id).subscribe(
-        res => {
-          if (res) {
-            this.listAll();
+          res => {
+            if (res) {
+              this.listAll();
+            }
+          },
+          error => {
+            console.log(error);
           }
-        },
-        error => {
-          console.log(error);
-        }
-      );
-    }
+        );
+      }
+    } else { alert('Usuário não autorizado'); }
   }
 
   reset() {
@@ -86,10 +129,12 @@ export class PaisComponent implements OnInit {
   }
 
   edit(pais: PaisViewModel) {
-    this.model.id = pais.id;
-    this.model.nome = pais.nome;
-    this.model.sigla = pais.sigla;
-    this.model.gentilico = pais.gentilico;
+    if (this.usuarioService.getAdmin()) {
+      this.model.id = pais.id;
+      this.model.nome = pais.nome;
+      this.model.sigla = pais.sigla;
+      this.model.gentilico = pais.gentilico;
+    } else { alert('Usuário não autorizado'); }
   }
 
   token() {

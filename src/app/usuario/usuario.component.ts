@@ -19,8 +19,15 @@ export class UsuarioComponent implements OnInit {
   }
 
   login(): void {
-    this.usuarioService.auth(this.auth).subscribe(res =>
-      this.usuarioService.setResponse(res)
+    this.usuarioService.auth(this.auth).subscribe(res => {
+        if (res.autenticado) {
+          this.usuarioService.setResponse(res);
+        } else {
+          alert('Usuário ou senha inválidos');
+          this.auth.login = '';
+          this.auth.senha = '';
+        }
+      }
     );
   }
 }

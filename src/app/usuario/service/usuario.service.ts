@@ -11,6 +11,7 @@ export class UsuarioService {
   public isUserLoggedIn: boolean;
   private token;
   private admin;
+  private user;
   private BASE_URL = 'http://localhost:8090';
   private RENEW_URL = `${this.BASE_URL}\\usuario\\renovar-ticket?token=`;
   private AUTH_URL = `${this.BASE_URL}\\usuario\\autenticar`;
@@ -31,10 +32,8 @@ export class UsuarioService {
     this.isUserLoggedIn = response.autenticado;
     this.token = response.token;
     this.admin = response.administrador;
+    this.user = response.login;
     this.router.navigate(['/home']);
-    console.log(this.getToken());
-    console.log(this.admin);
-    console.log(this.isUserLoggedIn);
   }
 
   getToken(): string {
@@ -47,5 +46,9 @@ export class UsuarioService {
 
   getAdmin(): boolean {
     return this.admin;
+  }
+
+  getUser(): string {
+    return this.user;
   }
 }
